@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router();
+const app = express();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -22,7 +22,7 @@ const verify = require("../../helpers/verify");
 // Creating the salesman id
 // This is done by the admin
 
-router.post("/create", verify, async (req, res) => {
+app.post("/create", verify, async (req, res) => {
   //Validating the data before creating the salesman
 
   const { error } = salesmanCreationValidation(req.body);
@@ -74,7 +74,7 @@ router.post("/create", verify, async (req, res) => {
 
 // Login of the sales man
 // Data collected is Salesman Code (code) and Password
-router.post("/login", async (req, res) => {
+app.post("/login", async (req, res) => {
   //Validating the data before logging in the salesman
 
   const { error } = salesmanLoginValidation(req.body);
@@ -135,7 +135,7 @@ router.post("/login", async (req, res) => {
 
 //Creating password if not created
 
-router.post("/createPassword", async (req, res) => {
+app.post("/createPassword", async (req, res) => {
   //Validating the data before logging in the salesman
 
   const { error } = passwordCreationValidation(req.body);
@@ -190,4 +190,7 @@ router.post("/createPassword", async (req, res) => {
   }
 });
 
-module.exports = router;
+// GETTING THE LIST OF SALESPERSON
+app.get("/", verify, async (req, res) => {});
+
+module.exports = app;

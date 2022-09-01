@@ -134,6 +134,7 @@ app.get("/salesperson/:id", verify, async (req, res) => {
   // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
   try {
     var distributorData = await Distributor.find({ salesPersonId: id })
+      .sort({ createdDate: "desc" })
       .limit(limit)
       .skip(startIndex);
 
@@ -162,6 +163,7 @@ app.get("/", verify, async (req, res) => {
   // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
   try {
     var distributorData = await Distributor.find()
+      .sort({ createdDate: "desc" })
       .limit(limit)
       .skip(startIndex);
 
