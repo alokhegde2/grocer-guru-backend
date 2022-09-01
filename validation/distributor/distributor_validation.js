@@ -22,5 +22,29 @@ const distributorCreationValidation = (data) => {
   return schema.validate(data);
 };
 
+//login validation
+
+const distributorLoginValidation = (data) => {
+  const schema = Joi.object({
+    code: Joi.string().required(),
+    password: Joi.string().min(5),
+  });
+
+  return schema.validate(data);
+};
+
+//login validation
+
+const passwordCreationValidation = (data) => {
+  const schema = Joi.object({
+    code: Joi.string().required(),
+    password: Joi.string().min(5),
+  });
+
+  return schema.validate(data);
+};
+
 //Exporting modules
 module.exports.distributorCreationValidation = distributorCreationValidation;
+module.exports.distributorLoginValidation = distributorLoginValidation;
+module.exports.passwordCreationValidation = passwordCreationValidation;

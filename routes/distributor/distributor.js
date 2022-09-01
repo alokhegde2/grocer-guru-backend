@@ -14,6 +14,8 @@ const Salesperson = require("../../models/salesman/salesman");
 // Validation
 const {
   distributorCreationValidation,
+  distributorLoginValidation,
+  passwordCreationValidation,
 } = require("../../validation/distributor/distributor_validation");
 
 // JWT verification middleware
@@ -200,6 +202,123 @@ app.get("/:id", verify, async (req, res) => {
     return res
       .status(200)
       .json({ status: "success", distributor: distributorData });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+// Login of the distributor
+// Data collected is Distributor Code (code) and Password
+app.post("/login", async (req, res) => {
+  //Validating the data before logging in the salesman
+
+  const { error } = distributorLoginValidation(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  const { code, password } = req.body;
+
+  //Check the user existance
+  const distributorData = await Distributor.findOne({ code: code });
+
+  if (!distributorData) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Distributor not found" });
+  }
+
+  //Check if passoword created
+  if (distributorData["hashedPassword"] === "") {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Password is not created" });
+  }
+
+  //comparing two passwords one is user entered and another one is the actual password
+  const validPass = await bcrypt.compare(
+    password,
+    distributorData["hashedPassword"]
+  );
+
+  //If passwords do not match
+  if (!validPass) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Invalid password" });
+  }
+
+  //importing secret password
+  const secret = process.env.SECRET;
+
+  //Creating jwt
+  const token = jwt.sign(
+    {
+      id: distributorData["_id"],
+      code: distributorData["code"],
+    },
+    secret,
+    { expiresIn: "7d" }
+  );
+
+  //returning succes with header auth-token
+  return res
+    .status(200)
+    .header("auth-token", token)
+    .json({ status: "success", authToken: token });
+});
+
+//Creating password if not created
+
+app.post("/createPassword", async (req, res) => {
+  //Validating the data before logging in the salesman
+
+  const { error } = passwordCreationValidation(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  //GEtting data from body
+
+  const { code, password } = req.body;
+
+  //Check the user existance
+  const distributorData = await Distributor.findOne({ code: code });
+
+  if (!distributorData) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Distributor not found" });
+  }
+
+  //Check if passoword created
+  if (distributorData["hashedPassword"] !== "") {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Password is already created" });
+  }
+
+  //Hashing the password
+  //creating salt for hashing
+  const salt = await bcrypt.genSalt(10);
+  const hashPassword = await bcrypt.hash(password, salt);
+
+  // Running update query to update the document
+  try {
+    const update = { hashedPassword: hashPassword };
+
+    await Distributor.findByIdAndUpdate(distributorData["_id"], update);
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Password Created Succefully" });
   } catch (error) {
     console.error(error);
     return res
