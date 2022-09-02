@@ -58,7 +58,7 @@ app.use(`${api}/distributor`, distributorRoute);
 //Connecting to mongodb database
 mongoose
   .connect(
-    process.env.DEV_DATABASE +
+    process.env.DATABASE +
       //TODO:FIX THIS WHILE RELEASE
       "/grocer_guru",
 
