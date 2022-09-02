@@ -4,6 +4,12 @@ const cors = require("cors");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const https = require("https");
+const fs = require("fs");
+
+const options = {
+  key: fs.readFileSync("key.pem"),
+  cert: fs.readFileSync("cert.pem"),
+};
 
 //importing dot env
 require("dotenv/config");
@@ -14,6 +20,8 @@ const api = process.env.API_URL;
 
 //Initializing app
 const app = express();
+
+var server = https.createServer(options, app);
 
 //CORS
 app.use(cors());
@@ -50,7 +58,7 @@ app.use(`${api}/distributor`, distributorRoute);
 //Connecting to mongodb database
 mongoose
   .connect(
-    process.env.DATABASE +
+    process.env.DEV_DATABASE +
       //TODO:FIX THIS WHILE RELEASE
       "/grocer_guru",
 
@@ -76,6 +84,6 @@ const port = process.env.PORT || 3000;
 // var server = https.createServer(app);
 
 //Running server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running at port ${port} ...`);
 });
