@@ -149,15 +149,19 @@ app.post("/verifynumber", async (req, res) => {
   const { code, phoneNumber } = req.body;
 
   try {
-    const statusResponse = await Salesman.find({
+    const statusResponse = await Salesman.findOne({
       code: code,
       phoneNumber: phoneNumber,
-    }).count();
+    });
 
-    if (statusResponse === 0) {
+    if (statusResponse.length === 0) {
       return res
         .status(400)
         .json({ status: "error", message: "Invalid credentials." });
+    } else if (statusResponse.hashedPassword != "") {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Password is already created" });
     }
 
     return res
