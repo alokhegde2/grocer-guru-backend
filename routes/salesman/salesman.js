@@ -9,6 +9,7 @@ require("dotenv/config");
 
 //Importing model
 const Salesman = require("../../models/salesman/salesman");
+const Distributor = require("../../models/distributor/distributor");
 
 // Validation
 const {
@@ -293,4 +294,47 @@ app.get("/:id", verify, async (req, res) => {
       .json({ status: "error", message: "Internal Server Error" });
   }
 });
+
+app.get("/dashboard/:id", verify, async (req, res) => {
+  const { id } = req.params;
+
+  // VERIFYING SALESMAN ID
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid Salesperson Id" });
+  }
+
+  //GETTING DATAS
+  try {
+    // GETTING TOTAL DISTRIBUTOR THAT THE CURRENT SALESMAN CREATED
+    var totalDistributorCount = await Distributor.find({
+      salesPersonId: id,
+    }).count();
+    // GETTING THE APPROVED DISTRIBUTOR
+    var approvedDistributorCount = await Distributor.find({
+      salesPersonId: id,
+      isApproved: true,
+    }).count();
+    // GETTING THE REJECTED DISTRIBUTOR
+    var rejectedDistributorCount = await Distributor.find({
+      salesPersonId: id,
+      isApproved: false,
+      rejectionReason: { $ne: "" },
+    }).count();
+
+    return res.status(200).json({
+      status: "success",
+      allCounts: {
+        totalDistributorCount: totalDistributorCount,
+        approvedDistributorCount: approvedDistributorCount,
+        rejectedDistributorCount: rejectedDistributorCount,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
 module.exports = app;
