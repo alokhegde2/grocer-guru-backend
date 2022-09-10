@@ -84,6 +84,11 @@ const distributorSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
+  rejectionReason: {
+    type: String,
+    required: true,
+    default: "",
+  },
   createdDate: {
     type: Date,
     default: Date.now(),

@@ -329,4 +329,82 @@ app.post("/createPassword", async (req, res) => {
   }
 });
 
+// GETTING ALL DISTRIBUTOR ON THE BASIS OF THE SALESPERSON ID MAINLY APPROVED
+app.get("/approved-salesperson/:id", verify, async (req, res) => {
+  const { id } = req.params;
+
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // VERIFYING SALESPERSON ID
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid Salesperson Id" });
+  }
+
+  // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
+  try {
+    var distributorData = await Distributor.find({
+      salesPersonId: id,
+      isApproved: true,
+    })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    if (!distributorData) {
+      return res.send(200).json({ status: "success", distributors: [] });
+    }
+
+    return res
+      .status(200)
+      .json({ status: "success", distributors: distributorData });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+// GETTING ALL DISTRIBUTOR ON THE BASIS OF THE SALESPERSON ID MAINLY REJECTED
+app.get("/rejected-salesperson/:id", verify, async (req, res) => {
+  const { id } = req.params;
+
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // VERIFYING SALESPERSON ID
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid Salesperson Id" });
+  }
+
+  // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
+  try {
+    var distributorData = await Distributor.find({
+      salesPersonId: id,
+      isApproved: false,
+      rejectionReason: { $ne: "" },
+    })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    if (!distributorData) {
+      return res.send(200).json({ status: "success", distributors: [] });
+    }
+
+    return res
+      .status(200)
+      .json({ status: "success", distributors: distributorData });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
 module.exports = app;
