@@ -15,6 +15,7 @@ const {
   salesmanCreationValidation,
   salesmanLoginValidation,
   passwordCreationValidation,
+  phoneNumberValidation,
 } = require("../../validation/salesman/salesman_validation");
 
 // JWT verification middleware
@@ -132,6 +133,42 @@ app.post("/login", async (req, res) => {
     .status(200)
     .header("auth-token", token)
     .json({ status: "success", authToken: token });
+});
+
+// Verify phone number before sendin otp
+app.post("/verifynumber", async (req, res) => {
+  //Validating the data before logging in the salesman
+
+  const { error } = phoneNumberValidation(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  const { code, phoneNumber } = req.body;
+
+  try {
+    const statusResponse = await Salesman.find({
+      code: code,
+      phoneNumber: phoneNumber,
+    }).count();
+
+    if (statusResponse === 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Invalid credentials." });
+    }
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Proper credentials" });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
 });
 
 //Creating password if not created

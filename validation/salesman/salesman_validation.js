@@ -35,7 +35,17 @@ const passwordCreationValidation = (data) => {
   return schema.validate(data);
 };
 
+const phoneNumberValidation = (data) => {
+  const schema = Joi.object({
+    code: Joi.string().required(),
+    phoneNumber: Joi.string().min(10).max(15),
+  });
+
+  return schema.validate(data);
+};
+
 //Exporting modules
 module.exports.salesmanCreationValidation = salesmanCreationValidation;
 module.exports.salesmanLoginValidation = salesmanLoginValidation;
 module.exports.passwordCreationValidation = passwordCreationValidation;
+module.exports.phoneNumberValidation = phoneNumberValidation;
