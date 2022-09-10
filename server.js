@@ -3,7 +3,6 @@ const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
-const https = require("https");
 const fs = require("fs");
 
 const options = {
@@ -20,8 +19,6 @@ const api = process.env.API_URL;
 
 //Initializing app
 const app = express();
-
-var server = https.createServer(options, app);
 
 //CORS
 app.use(cors());
@@ -61,7 +58,6 @@ mongoose
     process.env.DATABASE +
       //TODO:FIX THIS WHILE RELEASE
       "/grocer_guru",
-
     {
       useNewUrlParser: true,
       //TODO:Add it while deployment
@@ -84,6 +80,6 @@ const port = process.env.PORT || 3000;
 // var server = https.createServer(app);
 
 //Running server
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server is running at port ${port} ...`);
 });

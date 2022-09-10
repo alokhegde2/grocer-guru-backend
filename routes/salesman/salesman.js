@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 //importing dot env
 require("dotenv/config");
@@ -191,6 +192,64 @@ app.post("/createPassword", async (req, res) => {
 });
 
 // GETTING THE LIST OF SALESPERSON
-app.get("/", verify, async (req, res) => {});
+app.get("/", verify, async (req, res) => {
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
 
+  const startIndex = (page - 1) * limit;
+
+  // GETTING ALL THE SALESPERSON
+
+  try {
+    var salesmanData = await Salesman.find()
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    if (!salesmanData) {
+      return res.send(200).json({ status: "success", distributors: [] });
+    }
+
+    var salesmanCount = await Salesman.count();
+
+    return res.status(200).json({
+      status: "success",
+      salesmans: salesmanData,
+      salesmanCount: salesmanCount,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+// GETTING SINGLE SALESMAN DATA
+app.get("/:id", verify, async (req, res) => {
+  const { id } = req.params;
+
+  // VERIFYING SALESMAN ID
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid Salesperson Id" });
+  }
+
+  // GETTING THE SALESPERSON DATA
+  try {
+    var salesmanData = await Salesman.findById(id);
+
+    if (!salesmanData) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Salesman not found" });
+    }
+
+    return res.status(200).json({ status: "success", salesman: salesmanData });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
 module.exports = app;
