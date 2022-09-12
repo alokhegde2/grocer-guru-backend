@@ -455,4 +455,33 @@ app.get("/rejected-salesperson/:id", verify, async (req, res) => {
       .json({ status: "error", message: "Internal Server Error" });
   }
 });
+
+// GETTING PENDING APPROVAL DISTRIBUTOR
+app.get("/pending", verify, async (req, res) => {
+  try {
+    var pendingDistributorCount = await Distributor.find({
+      isApproved: false,
+    }).count();
+
+    var pendingDistributors = await Distributor.find({
+      isApproved: false,
+    });
+
+    return res.status(200).json({
+      status: "success",
+      distributors: pendingDistributors,
+      count: pendingDistributorCount,
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+// APPROVING THE DISTRIBUTOR
+
+// REJECTING THE DISTRIBUTOR
+
 module.exports = app;
