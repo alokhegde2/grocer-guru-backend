@@ -16,6 +16,7 @@ const {
   distributorCreationValidation,
   distributorLoginValidation,
   passwordCreationValidation,
+  phoneNumberValidation,
 } = require("../../validation/distributor/distributor_validation");
 
 // JWT verification middleware
@@ -204,6 +205,46 @@ app.get("/:id", verify, async (req, res) => {
     return res
       .status(200)
       .json({ status: "success", distributor: distributorData });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+// Verify phone number before sendin otp
+app.post("/verifynumber", async (req, res) => {
+  //Validating the data before logging in the salesman
+
+  const { error } = phoneNumberValidation(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  const { code, phoneNumber } = req.body;
+
+  try {
+    const statusResponse = await Distributor.findOne({
+      code: code,
+      phoneNumber: phoneNumber,
+    });
+
+    if (statusResponse.length === 0) {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Invalid credentials." });
+    } else if (statusResponse.hashedPassword != "") {
+      return res
+        .status(400)
+        .json({ status: "error", message: "Password is already created" });
+    }
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Proper credentials" });
   } catch (error) {
     console.error(error);
     return res
