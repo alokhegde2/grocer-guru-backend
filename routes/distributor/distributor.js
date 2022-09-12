@@ -232,7 +232,7 @@ app.post("/verifynumber", async (req, res) => {
       phoneNumber: phoneNumber,
     });
     console.log(statusResponse);
-    if (statusResponse.length === 0) {
+    if (statusResponse === null) {
       return res
         .status(400)
         .json({ status: "error", message: "Invalid credentials." });
