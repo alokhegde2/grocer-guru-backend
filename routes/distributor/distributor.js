@@ -231,7 +231,7 @@ app.post("/verifynumber", async (req, res) => {
       code: code,
       phoneNumber: phoneNumber,
     });
-
+    console.log(statusResponse);
     if (statusResponse.length === 0) {
       return res
         .status(400)
