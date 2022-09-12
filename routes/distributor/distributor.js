@@ -276,6 +276,13 @@ app.post("/login", async (req, res) => {
       .json({ status: "error", message: "Distributor not found" });
   }
 
+  if (!distributorData["isApproved"]) {
+    return res.status(400).json({
+      status: "error",
+      message: "You're account is not approved. Please wait for the approval.",
+    });
+  }
+
   //Check if passoword created
   if (distributorData["hashedPassword"] === "") {
     return res
