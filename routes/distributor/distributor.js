@@ -457,7 +457,11 @@ app.get("/rejected-salesperson/:id", verify, async (req, res) => {
 });
 
 // GETTING PENDING APPROVAL DISTRIBUTOR
-app.get("/pending", verify, async (req, res) => {
+app.get("/admin/pending", verify, async (req, res) => {
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
   try {
     var pendingDistributorCount = await Distributor.find({
       isApproved: false,
@@ -465,7 +469,10 @@ app.get("/pending", verify, async (req, res) => {
 
     var pendingDistributors = await Distributor.find({
       isApproved: false,
-    });
+    })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
 
     return res.status(200).json({
       status: "success",
@@ -481,6 +488,25 @@ app.get("/pending", verify, async (req, res) => {
 });
 
 // APPROVING THE DISTRIBUTOR
+
+app.put("/admin/approve/:id", verify, async (req, res) => {
+  const { id } = req.params;
+  // VERIFYING SALESPERSON ID
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid Salesperson Id" });
+  }
+
+  try {
+    await Distributor.findByIdAndUpdate(id, { isApproved: true });
+
+    return res.status(200).json({ message: "success" });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
 
 // REJECTING THE DISTRIBUTOR
 

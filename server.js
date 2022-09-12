@@ -55,9 +55,11 @@ app.use(`${api}/distributor`, distributorRoute);
 //Connecting to mongodb database
 mongoose
   .connect(
-    process.env.DATABASE +
-      //TODO:FIX THIS WHILE RELEASE
-      "/grocer_guru",
+    process.env.DEV_DATABASE,
+    //+
+    //TODO:FIX THIS WHILE RELEASE
+    // "/grocer_guru"
+
     {
       useNewUrlParser: true,
       //TODO:Add it while deployment
