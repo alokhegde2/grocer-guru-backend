@@ -510,4 +510,28 @@ app.put("/admin/approve/:id", verify, async (req, res) => {
 
 // REJECTING THE DISTRIBUTOR
 
+app.put("/admin/reject/:id", verify, async (req, res) => {
+  const { id } = req.params;
+  const { rejectionReason } = req.body;
+
+  // VERIFYING SALESPERSON ID
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid Salesperson Id" });
+  }
+
+  try {
+    await Distributor.findByIdAndUpdate(id, {
+      isApproved: false,
+      rejectionReason: rejectionReason,
+    });
+
+    return res.status(200).json({ message: "success" });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
 module.exports = app;
