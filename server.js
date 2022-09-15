@@ -42,6 +42,9 @@ const salesmanRoute = require("./routes/salesman/salesman");
 // DISTRIBUTOR
 const distributorRoute = require("./routes/distributor/distributor");
 
+// RETAILER
+const retailerRoute = require("./routes/retailer/retailer");
+
 //All route middlewares goes here
 //admin routes
 app.use(`${api}/admin`, adminRoute);
@@ -49,15 +52,19 @@ app.use(`${api}/admin`, adminRoute);
 //Salesman route
 app.use(`${api}/salesman`, salesmanRoute);
 
-//DISTRIBUTOR SERVICE
+//DISTRIBUTOR ROUTE
 app.use(`${api}/distributor`, distributorRoute);
+
+//RETAILER ROUTE
+app.use(`${api}/retailer`, retailerRoute);
 
 //Connecting to mongodb database
 mongoose
   .connect(
-    process.env.DATABASE +
-      //TODO:FIX THIS WHILE RELEASE
-      "/grocer_guru",
+    process.env.DEV_DATABASE,
+    // +
+    //TODO:FIX THIS WHILE RELEASE
+    // "/grocer_guru",
     {
       useNewUrlParser: true,
       //TODO:Add it while deployment
