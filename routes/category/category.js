@@ -62,6 +62,28 @@ app.post("/create-matrix", verify, async (req, res) => {
   }
 });
 
+//Getting Category List
+app.get("/", verify, async (req, res) => {
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  //Getting the category list
+  try {
+    var categoryList = await CategoryMatrix.find()
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    return res.status(200).json({ status: "success", category: categoryList });
+  } catch (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: "Some error occured", error: error });
+  }
+});
+
 //Uploading images related to the category
 app.post("/upload", async (req, res) => {
   const files = req.files;
