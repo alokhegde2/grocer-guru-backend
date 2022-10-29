@@ -1,6 +1,15 @@
 const express = require("express");
 const app = express();
 const fileUpload = require("express-fileupload");
+const verify = require("../../helpers/verify");
+
+//Importing models
+const CategoryMatrix = require("../../models/category/category_matrix_model");
+
+//Importing validations
+const {
+  categoryMatrixCreationValidation,
+} = require("../../validation/category/category_validation");
 
 // Use the express-fileupload middleware
 app.use(
@@ -16,12 +25,41 @@ app.use(express.static("public"));
 
 //Creating the category matrix
 //This route is mainly used by the admin
-app.post("/create-matrix", async (req, res) => {
-  // Log the files to the console
-  console.log(req.files);
+app.post("/create-matrix", verify, async (req, res) => {
+  //Data recived from body
+  const { categoryName, categoryImageUrl } = req.body;
 
-  // All good
-  res.sendStatus(200);
+  //Verify the data came from the body
+  const { error } = categoryMatrixCreationValidation(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  //Creating category
+  var newMatrix = new CategoryMatrix({
+    categoryImageUrl: categoryImageUrl,
+    categoryName: categoryName,
+  });
+
+  //Saving the data
+  try {
+    await newMatrix.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Category Matrix Created Successfully!",
+      categoryMatrix: newMatrix,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({
+      status: "error",
+      message: "Unable to create category matrix",
+      error: error,
+    });
+  }
 });
 
 //Uploading images related to the category
@@ -50,7 +88,7 @@ app.post("/upload", async (req, res) => {
   return res.status(200).json({
     status: "success",
     message: "Image uploaded successfully!",
-    image_path: `http://127.0.0.1:3000/upload/category/${image.name}`,
+    image_path: `http://${req.hostname}/upload/category/${image.name}`,
   });
 });
 
