@@ -1,15 +1,16 @@
 const express = require("express");
 const app = express();
 const fileUpload = require("express-fileupload");
+const mongoose = require("mongoose");
 const verify = require("../../helpers/verify");
 
 //Importing models
-const CategoryMatrix = require("../../models/category/category_matrix_model");
+const ProductMatrix = require("../../models/product/product_matrix_model");
 
 //Importing validations
 const {
-  categoryMatrixCreationValidation,
-} = require("../../validation/category/category_validation");
+  productMatrixCreationValidation,
+} = require("../../validation/product/product_validation");
 
 // Use the express-fileupload middleware
 app.use(
@@ -23,24 +24,30 @@ app.use(
 
 app.use(express.static("public"));
 
-//Creating the category matrix
+//Creating the product matrix
 //This route is mainly used by the admin
 app.post("/create-matrix", verify, async (req, res) => {
   //Data recived from body
-  const { categoryName, categoryImageUrl } = req.body;
+  const { productName, productImageUrl, categoryId } = req.body;
 
   //Verify the data came from the body
-  const { error } = categoryMatrixCreationValidation(req.body);
+  const { error } = productMatrixCreationValidation(req.body);
   if (error) {
     return res
       .status(400)
       .json({ status: "error", message: error.details[0].message });
   }
 
+  // VERIFYING category ID
+  if (!mongoose.isValidObjectId(categoryId)) {
+    return res.status(400).json({ message: "Invalid Category" });
+  }
+
   //Creating category
-  var newMatrix = new CategoryMatrix({
-    categoryImageUrl: categoryImageUrl,
-    categoryName: categoryName,
+  var newMatrix = new ProductMatrix({
+    productName: productName,
+    productImageUrl: productImageUrl,
+    category: categoryId,
   });
 
   //Saving the data
@@ -49,20 +56,20 @@ app.post("/create-matrix", verify, async (req, res) => {
 
     return res.status(200).json({
       status: "success",
-      message: "Category Matrix Created Successfully!",
-      categoryMatrix: newMatrix,
+      message: "Product Matrix Created Successfully!",
+      productMatrix: newMatrix,
     });
   } catch (error) {
     console.error(error);
     return res.status(400).json({
       status: "error",
-      message: "Unable to create category matrix",
+      message: "Unable to create product matrix",
       error: error,
     });
   }
 });
 
-//Getting Category List
+//Getting Product List
 app.get("/", verify, async (req, res) => {
   const page = parseInt(req.query.page);
   const limit = parseInt(req.query.limit);
@@ -71,12 +78,49 @@ app.get("/", verify, async (req, res) => {
 
   //Getting the category list
   try {
-    var categoryList = await CategoryMatrix.find()
+    var productList = await ProductMatrix.find()
+      .populate({
+        path: "category",
+        select: ["categoryName", "categoryImageUrl", "_id"],
+      })
       .sort({ createdDate: "desc" })
       .limit(limit)
       .skip(startIndex);
 
-    return res.status(200).json({ status: "success", category: categoryList });
+    return res.status(200).json({ status: "success", products: productList });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(400)
+      .json({ status: "error", message: "Some error occured", error: error });
+  }
+});
+
+//Getting Product List on the basis of category
+app.get("/category-product/:categoryId", verify, async (req, res) => {
+  const { categoryId } = req.params;
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // VERIFYING category ID
+  if (!mongoose.isValidObjectId(categoryId)) {
+    return res.status(400).json({ message: "Invalid Category" });
+  }
+
+  //Getting the category list
+  try {
+    var productList = await ProductMatrix.find({ category: categoryId })
+      .populate({
+        path: "category",
+        select: ["categoryName", "categoryImageUrl", "_id"],
+      })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    return res.status(200).json({ status: "success", products: productList });
   } catch (error) {
     console.error(error);
     return res
@@ -105,13 +149,13 @@ app.post("/upload", async (req, res) => {
       .json({ status: "error", message: "Please choose the image." });
 
   // Move the uploaded image to our upload folder
-  image.mv(__dirname + "/../.." + "/upload/category/" + image.name);
+  image.mv(__dirname + "/../.." + "/upload/product/" + image.name);
 
   // All good
   return res.status(200).json({
     status: "success",
     message: "Image uploaded successfully!",
-    image_path: `http://${req.hostname}/upload/category/${image.name}`,
+    image_path: `http://${req.hostname}/upload/product/${image.name}`,
   });
 });
 

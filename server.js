@@ -51,6 +51,9 @@ const retailerRoute = require("./routes/retailer/retailer");
 // Category
 const categoryRoute = require("./routes/category/category");
 
+// Product
+const productRoute = require("./routes/product/product");
+
 //All route middlewares goes here
 //admin routes
 app.use(`${api}/admin`, adminRoute);
@@ -66,6 +69,9 @@ app.use(`${api}/retailer`, retailerRoute);
 
 //Category ROUTE
 app.use(`${api}/category`, categoryRoute);
+
+//Product ROUTE
+app.use(`${api}/product`, productRoute);
 
 //Connecting to mongodb database
 mongoose
