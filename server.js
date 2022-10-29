@@ -4,6 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const mongoose = require("mongoose");
 const fs = require("fs");
+const path = require("path");
 
 const options = {
   key: fs.readFileSync("key.pem"),
@@ -16,6 +17,7 @@ require("dotenv/config");
 //initializing api
 //which is the initial route of api
 const api = process.env.API_URL;
+const directory = path.join(__dirname, "upload/");
 
 //Initializing app
 const app = express();
@@ -27,6 +29,7 @@ app.options("*", cors());
 //Middlewares
 //Middleware to serve static files
 app.use(express.static("public"));
+app.use("/upload", express.static(directory));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan("tiny"));
@@ -45,6 +48,9 @@ const distributorRoute = require("./routes/distributor/distributor");
 // RETAILER
 const retailerRoute = require("./routes/retailer/retailer");
 
+// Category
+const categoryRoute = require("./routes/category/category");
+
 //All route middlewares goes here
 //admin routes
 app.use(`${api}/admin`, adminRoute);
@@ -57,6 +63,9 @@ app.use(`${api}/distributor`, distributorRoute);
 
 //RETAILER ROUTE
 app.use(`${api}/retailer`, retailerRoute);
+
+//Category ROUTE
+app.use(`${api}/category`, categoryRoute);
 
 //Connecting to mongodb database
 mongoose
