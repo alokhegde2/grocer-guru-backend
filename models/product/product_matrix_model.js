@@ -19,6 +19,11 @@ const productMatrixSchema = new mongoose.Schema({
     ref: "CategoryMatrix",
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   createdDate: {
     type: Date,
     default: Date.now(),

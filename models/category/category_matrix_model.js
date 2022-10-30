@@ -14,6 +14,11 @@ const categoryMatrixSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   createdDate: {
     type: Date,
     default: Date.now(),

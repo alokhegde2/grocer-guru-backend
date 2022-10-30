@@ -6,10 +6,12 @@ const verify = require("../../helpers/verify");
 
 //Importing models
 const ProductMatrix = require("../../models/product/product_matrix_model");
+const Product = require("../../models/product/product_model");
 
 //Importing validations
 const {
   productMatrixCreationValidation,
+  productCreationValidation,
 } = require("../../validation/product/product_validation");
 
 // Use the express-fileupload middleware
@@ -126,6 +128,68 @@ app.get("/category-product/:categoryId", verify, async (req, res) => {
     return res
       .status(400)
       .json({ status: "error", message: "Some error occured", error: error });
+  }
+});
+
+//Route to add the product by retailer
+app.post("/add", verify, async (req, res) => {
+  const {
+    productId,
+    categoryId,
+    retailerId,
+    availableQuantity,
+    availableVarients,
+  } = req.body;
+
+  //Verify the data came from the body
+  const { error } = productCreationValidation(req.body);
+  if (error) {
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  //Verifying all id's
+  if (!mongoose.isValidObjectId(categoryId)) {
+    return res
+      .status(400)
+      .json({ message: "Invalid Category,please contact admin" });
+  }
+  if (!mongoose.isValidObjectId(productId)) {
+    return res
+      .status(400)
+      .json({ message: "Invalid Product,please contact admin" });
+  }
+  if (!mongoose.isValidObjectId(retailerId)) {
+    return res
+      .status(400)
+      .json({ message: "Invalid Shop,please contact admin" });
+  }
+
+  var newProduct = new Product({
+    availableVarients: availableVarients,
+    availableQuantity: availableQuantity,
+    category: categoryId,
+    product: productId,
+    retailer: retailerId,
+  });
+
+  //Saving the data to db
+  try {
+    await newProduct.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Product Created Successfully!",
+      product: newProduct,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({
+      status: "error",
+      message: "Unable to create product!",
+      error: error,
+    });
   }
 });
 
