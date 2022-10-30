@@ -54,6 +54,11 @@ const productSchema = new mongoose.Schema({
       },
     },
   ],
+  offerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Offers",
+    required: false,
+  },
   createdDate: {
     type: Date,
     default: Date.now(),
