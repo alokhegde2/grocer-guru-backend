@@ -193,6 +193,101 @@ app.post("/add", verify, async (req, res) => {
   }
 });
 
+/**
+ * Getting the products using retailer id
+ * It gives all the products created by that retailer
+ */
+app.get("/all-products/:retailerId", verify, async (req, res) => {
+  const { retailerId } = req.params;
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // VERIFYING category ID
+  if (!mongoose.isValidObjectId(retailerId)) {
+    return res.status(400).json({ message: "Invalid Category" });
+  }
+
+  //Getting the category list
+  try {
+    var productList = await Product.find({ retailer: retailerId })
+      .populate({
+        path: "category",
+        select: ["categoryName", "categoryImageUrl", "_id"],
+      })
+      .populate({
+        path: "product",
+        select: ["productName", "productImageUrl", "_id"],
+      })
+      .populate({
+        path: "retailer",
+        select: ["name", "code", "_id"],
+      })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    return res.status(200).json({ status: "success", products: productList });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(400)
+      .json({ status: "error", message: "Some error occured", error: error });
+  }
+});
+
+/**
+ * Getting the products using retailer id and category id
+ * It gives all the products created by that retailer and belogs to the given category
+ */
+app.get("/all-products/:retailerId/:categoryId", verify, async (req, res) => {
+  const { retailerId, categoryId } = req.params;
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // VERIFYING category ID
+  if (!mongoose.isValidObjectId(categoryId)) {
+    return res.status(400).json({ message: "Invalid Category" });
+  }
+
+  if (!mongoose.isValidObjectId(retailerId)) {
+    return res.status(400).json({ message: "Invalid Category" });
+  }
+
+  //Getting the category list
+  try {
+    var productList = await Product.find({
+      retailer: retailerId,
+      category: categoryId,
+    })
+      .populate({
+        path: "category",
+        select: ["categoryName", "categoryImageUrl", "_id"],
+      })
+      .populate({
+        path: "product",
+        select: ["productName", "productImageUrl", "_id"],
+      })
+      .populate({
+        path: "retailer",
+        select: ["name", "code", "_id"],
+      })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    return res.status(200).json({ status: "success", products: productList });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(400)
+      .json({ status: "error", message: "Some error occured", error: error });
+  }
+});
+
 //Uploading images related to the category
 app.post("/upload", async (req, res) => {
   const files = req.files;
