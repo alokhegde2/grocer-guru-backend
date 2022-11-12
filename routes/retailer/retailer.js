@@ -15,6 +15,7 @@ const Retailer = require("../../models/retailer/retailer");
 const {
   retailerCreationValidation,
   retailerLoginValidation,
+  phoneNumberValidation,
 } = require("../../validation/retailer/retailer_validation");
 
 // JWT verification middleware
@@ -114,7 +115,7 @@ app.post("/login", async (req, res) => {
   //
   logger.log({
     level: "info",
-    message: `Logging In | Retailer Code: ${code}|`,
+    message: `Retailer| Logging In | Retailer Code: ${code}|`,
   });
   //Validating the data before logging in the Retailer
 
@@ -122,7 +123,7 @@ app.post("/login", async (req, res) => {
   if (error) {
     logger.log({
       level: "error",
-      message: `Validation Failed | Retailer Code: ${code}| Message:${error.details[0].message} `,
+      message: `Retailer| Validation Failed | Retailer Code: ${code}| Message:${error.details[0].message} `,
     });
     return res
       .status(400)
@@ -135,7 +136,7 @@ app.post("/login", async (req, res) => {
   if (!retailerData) {
     logger.log({
       level: "error",
-      message: `Logging In | Retailer Code: ${code}| Retailer Not Found`,
+      message: `Retailer| Logging In | Retailer Code: ${code}| Retailer Not Found`,
     });
     return res
       .status(400)
@@ -145,7 +146,7 @@ app.post("/login", async (req, res) => {
   if (!retailerData["isApproved"]) {
     logger.log({
       level: "error",
-      message: `Logging In | Retailer Code: ${code}|Retailer is not approved`,
+      message: `Retailer| Logging In | Retailer Code: ${code}|Retailer is not approved`,
     });
     return res.status(400).json({
       status: "error",
@@ -157,7 +158,7 @@ app.post("/login", async (req, res) => {
   if (retailerData["hashedPassword"] === "") {
     logger.log({
       level: "error",
-      message: `Logging In | Retailer Code: ${code}|Password not created`,
+      message: `Retailer| Logging In | Retailer Code: ${code}|Password not created`,
     });
     return res
       .status(400)
@@ -174,7 +175,7 @@ app.post("/login", async (req, res) => {
   if (!validPass) {
     logger.log({
       level: "info",
-      message: `Logging In | Retailer Code: ${code}|Invalid Password`,
+      message: `Retailer| Logging In | Retailer Code: ${code}|Invalid Password`,
     });
     return res
       .status(400)
@@ -195,13 +196,81 @@ app.post("/login", async (req, res) => {
   );
   logger.log({
     level: "info",
-    message: `Logged In | Retailer Code: ${code}|`,
+    message: `Retailer| Logged In | Retailer Code: ${code}|`,
   });
   //returning succes with header auth-token
   return res
     .status(200)
     .header("auth-token", token)
     .json({ status: "success", authToken: token });
+});
+
+/**
+ * Verify number before sending otp
+ */
+
+app.post("/verifynumber", async (req, res) => {
+  const { code, phoneNumber } = req.body;
+  logger.log({
+    level: "info",
+    message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber}`,
+  });
+
+  //Validating the data before logging in the salesman
+
+  const { error } = phoneNumberValidation(req.body);
+  if (error) {
+    logger.log({
+      level: "error",
+      message: `Retailer| Verify Number | Retailer Code: ${code}`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  try {
+    const statusResponse = await Retailer.findOne({
+      code: code,
+      phoneNumber: phoneNumber,
+    });
+
+    if (statusResponse === null) {
+      logger.log({
+        level: "error",
+        message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber}| Invalid Credentials`,
+      });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Invalid credentials." });
+    } else if (statusResponse.hashedPassword != "") {
+      logger.log({
+        level: "error",
+        message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber}| Password is already created`,
+      });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Password is already created" });
+    }
+
+    logger.log({
+      level: "info",
+      message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber} | Verified`,
+    });
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Proper credentials" });
+  } catch (error) {
+    console.error(error);
+    logger.log({
+      level: "error",
+      message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber}|${e}`,
+    });
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
 });
 
 module.exports = app;

@@ -27,5 +27,16 @@ const retailerLoginValidation = (data) => {
   return schema.validate(data);
 };
 
+//Phone number validation
+const phoneNumberValidation = (data) => {
+  const schema = Joi.object({
+    code: Joi.string().required(),
+    phoneNumber: Joi.string().min(10).max(15),
+  });
+
+  return schema.validate(data);
+};
+
 module.exports.retailerCreationValidation = retailerCreationValidation;
 module.exports.retailerLoginValidation = retailerLoginValidation;
+module.exports.phoneNumberValidation = phoneNumberValidation;
