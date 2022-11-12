@@ -16,4 +16,16 @@ const retailerCreationValidation = (data) => {
   return schema.validate(data);
 };
 
+
+//login validation
+const retailerLoginValidation = (data) => {
+  const schema = Joi.object({
+    code: Joi.string().required(),
+    password: Joi.string().min(5),
+  });
+
+  return schema.validate(data);
+};
+
 module.exports.retailerCreationValidation = retailerCreationValidation;
+module.exports.retailerLoginValidation = retailerLoginValidation;

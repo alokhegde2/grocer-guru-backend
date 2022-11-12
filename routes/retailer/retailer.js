@@ -14,12 +14,14 @@ const Retailer = require("../../models/retailer/retailer");
 // Validation
 const {
   retailerCreationValidation,
+  retailerLoginValidation,
 } = require("../../validation/retailer/retailer_validation");
 
 // JWT verification middleware
 const verify = require("../../helpers/verify");
+const logger = require("../../helpers/logger");
 
-/// CREATING THE DISTRIBUTOR
+// CREATING THE RETAILER
 app.post("/", verify, async (req, res) => {
   const {
     name,
@@ -100,6 +102,106 @@ app.post("/", verify, async (req, res) => {
       .status(500)
       .json({ status: "error", message: "Internal Server Error" });
   }
+});
+
+/**
+ * Reatiler login
+ */
+
+app.post("/login", async (req, res) => {
+  //
+  const { code, password } = req.body;
+  //
+  logger.log({
+    level: "info",
+    message: `Logging In | Retailer Code: ${code}|`,
+  });
+  //Validating the data before logging in the Retailer
+
+  const { error } = retailerLoginValidation(req.body);
+  if (error) {
+    logger.log({
+      level: "error",
+      message: `Validation Failed | Retailer Code: ${code}| Message:${error.details[0].message} `,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  //Check the user existance
+  const retailerData = await Retailer.findOne({ code: code });
+
+  if (!retailerData) {
+    logger.log({
+      level: "error",
+      message: `Logging In | Retailer Code: ${code}| Retailer Not Found`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Retailer not found" });
+  }
+
+  if (!retailerData["isApproved"]) {
+    logger.log({
+      level: "error",
+      message: `Logging In | Retailer Code: ${code}|Retailer is not approved`,
+    });
+    return res.status(400).json({
+      status: "error",
+      message: "You're account is not approved. Please wait for the approval.",
+    });
+  }
+
+  //Check if passoword created
+  if (retailerData["hashedPassword"] === "") {
+    logger.log({
+      level: "error",
+      message: `Logging In | Retailer Code: ${code}|Password not created`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Password is not created" });
+  }
+
+  //comparing two passwords one is user entered and another one is the actual password
+  const validPass = await bcrypt.compare(
+    password,
+    retailerData["hashedPassword"]
+  );
+
+  //If passwords do not match
+  if (!validPass) {
+    logger.log({
+      level: "info",
+      message: `Logging In | Retailer Code: ${code}|Invalid Password`,
+    });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Invalid password" });
+  }
+
+  //importing secret password
+  const secret = process.env.SECRET;
+
+  //Creating jwt
+  const token = jwt.sign(
+    {
+      id: retailerData["_id"],
+      code: retailerData["code"],
+    },
+    secret,
+    { expiresIn: "7d" }
+  );
+  logger.log({
+    level: "info",
+    message: `Logged In | Retailer Code: ${code}|`,
+  });
+  //returning succes with header auth-token
+  return res
+    .status(200)
+    .header("auth-token", token)
+    .json({ status: "success", authToken: token });
 });
 
 module.exports = app;
