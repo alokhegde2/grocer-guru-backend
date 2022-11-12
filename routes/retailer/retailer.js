@@ -16,6 +16,7 @@ const {
   retailerCreationValidation,
   retailerLoginValidation,
   phoneNumberValidation,
+  passwordCreationValidation,
 } = require("../../validation/retailer/retailer_validation");
 
 // JWT verification middleware
@@ -216,7 +217,7 @@ app.post("/verifynumber", async (req, res) => {
     message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber}`,
   });
 
-  //Validating the data before logging in the salesman
+  //Validating the data before logging in the retailer
 
   const { error } = phoneNumberValidation(req.body);
   if (error) {
@@ -267,6 +268,93 @@ app.post("/verifynumber", async (req, res) => {
       level: "error",
       message: `Retailer| Verify Number | Retailer Code: ${code}| Phone Number: ${phoneNumber}|${e}`,
     });
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+/**
+ * Setting up the password for the retailer
+ */
+
+app.post("/createPassword", async (req, res) => {
+  //GEtting data from body
+
+  const { code, password } = req.body;
+
+  logger.log({
+    level: "info",
+    message: `Retailer| Creating Password | Retailer Code: ${code}`,
+  });
+
+  //Validating the data before logging in the retailer
+
+  const { error } = passwordCreationValidation(req.body);
+  if (error) {
+    logger.log({
+      level: "error",
+      message: `Retailer| Creating Password | Retailer Code: ${code}| ${error.details[0].message}`,
+    });
+
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  //Check the user existance
+  const retailerData = await Retailer.findOne({ code: code });
+
+  if (!retailerData) {
+    logger.log({
+      level: "error",
+      message: `Retailer| Creating Password | Retailer Code: ${code}| Retailer not found`,
+    });
+
+    return res
+      .status(400)
+      .json({ status: "error", message: "Retailer not found" });
+  }
+
+  //Check if passoword created
+  if (retailerData["hashedPassword"] !== "") {
+    logger.log({
+      level: "error",
+      message: `Retailer| Creating Password | Retailer Code: ${code}| Password is already created`,
+    });
+
+    return res
+      .status(400)
+      .json({ status: "error", message: "Password is already created" });
+  }
+
+  //Hashing the password
+  //creating salt for hashing
+  const salt = await bcrypt.genSalt(10);
+  const hashPassword = await bcrypt.hash(password, salt);
+
+  // Running update query to update the document
+  try {
+    const update = { hashedPassword: hashPassword };
+
+    await Retailer.findByIdAndUpdate(retailerData["_id"], update);
+
+    logger.log({
+      level: "info",
+      message: `Retailer| Creating Password | Retailer Code: ${code}| Password created Succefully`,
+    });
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "Password Created Succefully" });
+  } catch (error) {
+    logger.log({
+      level: "error",
+      message: `Retailer| Creating Password | Retailer Code: ${code}| ${error}`,
+    });
+
+    console.error(error);
+
     return res
       .status(500)
       .json({ status: "error", message: "Internal Server Error" });

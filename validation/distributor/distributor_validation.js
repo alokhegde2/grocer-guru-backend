@@ -33,7 +33,7 @@ const distributorLoginValidation = (data) => {
   return schema.validate(data);
 };
 
-//login validation
+//Password Creation
 
 const passwordCreationValidation = (data) => {
   const schema = Joi.object({
