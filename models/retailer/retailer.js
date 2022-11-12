@@ -98,6 +98,12 @@ const retailerSchema = new mongoose.Schema({
     default: "",
     required: false,
   },
+  location: {
+    type: { type: String },
+    coordinates: [],
+    required: false,
+    default: [],
+  },
   isApproved: {
     type: Boolean,
     required: false,

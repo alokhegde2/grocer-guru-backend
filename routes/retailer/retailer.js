@@ -17,6 +17,7 @@ const {
   retailerLoginValidation,
   phoneNumberValidation,
   passwordCreationValidation,
+  profileCompletionValidation,
 } = require("../../validation/retailer/retailer_validation");
 
 // JWT verification middleware
@@ -144,16 +145,16 @@ app.post("/login", async (req, res) => {
       .json({ status: "error", message: "Retailer not found" });
   }
 
-  if (!retailerData["isApproved"]) {
-    logger.log({
-      level: "error",
-      message: `Retailer| Logging In | Retailer Code: ${code}|Retailer is not approved`,
-    });
-    return res.status(400).json({
-      status: "error",
-      message: "You're account is not approved. Please wait for the approval.",
-    });
-  }
+  // if (!retailerData["isApproved"]) {
+  //   logger.log({
+  //     level: "error",
+  //     message: `Retailer| Logging In | Retailer Code: ${code}|Retailer is not approved`,
+  //   });
+  //   return res.status(400).json({
+  //     status: "error",
+  //     message: "You're account is not approved. Please wait for the approval.",
+  //   });
+  // }
 
   //Check if passoword created
   if (retailerData["hashedPassword"] === "") {
@@ -195,6 +196,18 @@ app.post("/login", async (req, res) => {
     secret,
     { expiresIn: "7d" }
   );
+
+  if (!retailerData["isApproved"]) {
+    logger.log({
+      level: "info",
+      message: `Retailer| Logged In | Retailer Code: ${code}| Retailer Not Approved till now`,
+    });
+    //returning succes with header auth-token
+    return res
+      .status(200)
+      .header("auth-token", token)
+      .json({ status: "success-not-approved", authToken: token });
+  }
   logger.log({
     level: "info",
     message: `Retailer| Logged In | Retailer Code: ${code}|`,
@@ -288,7 +301,7 @@ app.post("/createPassword", async (req, res) => {
     message: `Retailer| Creating Password | Retailer Code: ${code}`,
   });
 
-  //Validating the data before logging in the retailer
+  //Validating the data
 
   const { error } = passwordCreationValidation(req.body);
   if (error) {
@@ -354,6 +367,115 @@ app.post("/createPassword", async (req, res) => {
     });
 
     console.error(error);
+
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
+/**
+ * Profile Completion
+ */
+
+app.post("/complete-profile", verify, async (req, res) => {
+  //Getting data from body
+  const {
+    gstNumber,
+    bankName,
+    accountName,
+    accountNumber,
+    ifscCode,
+    upiId,
+    panCardCopy,
+    gstCopy,
+    retailerCode,
+    retailerId,
+    longitude,
+    latitude,
+  } = req.body;
+
+  logger.log({
+    level: "info",
+    message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}, Id: ${retailerId}, gstCopy: ${gstCopy}, panCardCopy: ${panCardCopy}, upiId: ${upiId}, ifscCode: ${ifscCode}, accountNumber: ${accountNumber}, accountName: ${accountName},bankName: ${bankName}, gstNumber:${gstNumber}`,
+  });
+
+  //Validating the data
+
+  const { error } = profileCompletionValidation(req.body);
+  if (error) {
+    logger.log({
+      level: "error",
+      message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}| ${error.details[0].message}`,
+    });
+
+    return res
+      .status(400)
+      .json({ status: "error", message: error.details[0].message });
+  }
+
+  //Verify the retailer id is proper
+  const retailerStatus = await Retailer.findOne({ code: retailerCode });
+
+  if (!retailerStatus) {
+    logger.log({
+      level: "error",
+      message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}| Invalid retailer code`,
+    });
+
+    return res
+      .status(400)
+      .json({ status: "error", message: "Retailer not found" });
+  }
+
+  if(retailerStatus["_id"]!=retailerId){
+    logger.log({
+      level: "error",
+      message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}| Invalid retailer id`,
+    });
+
+    return res
+      .status(400)
+      .json({ status: "error", message: "Retailer not found" });
+  }
+
+  //Updating the data
+  const updateData = {
+    gstNumber: gstNumber,
+    bankName: bankName,
+    accountName: accountName,
+    accountNumber: accountNumber,
+    ifscCode: ifscCode,
+    upiId: upiId,
+    panCardCopy: panCardCopy,
+    gstCopy: gstCopy,
+    longitude: longitude,
+    latitude: latitude,
+    location: {
+      type: "Point",
+      coordinates: [longitude, latitude],
+    },
+  };
+
+  try {
+    await Retailer.findByIdAndUpdate(retailerStatus["_id"], updateData);
+
+    logger.log({
+      level: "info",
+      message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}| Profile Completed! We're sending your profile for admin verification.Please wait untill you're profile got verified`,
+    });
+
+    return res.status(200).json({
+      status: "success",
+      message:
+        "Profile Completed! We're sending your profile for admin verification.Please wait untill you're profile got verified",
+    });
+  } catch (error) {
+    console.error(error);
+    logger.log({
+      level: "error",
+      message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}| ${error}`,
+    });
 
     return res
       .status(500)

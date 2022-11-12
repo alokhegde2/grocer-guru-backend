@@ -16,7 +16,6 @@ const retailerCreationValidation = (data) => {
   return schema.validate(data);
 };
 
-
 //login validation
 const retailerLoginValidation = (data) => {
   const schema = Joi.object({
@@ -37,7 +36,7 @@ const phoneNumberValidation = (data) => {
   return schema.validate(data);
 };
 
-//Password creation validatio
+//Password creation validatiom
 const passwordCreationValidation = (data) => {
   const schema = Joi.object({
     code: Joi.string().required(),
@@ -47,7 +46,28 @@ const passwordCreationValidation = (data) => {
   return schema.validate(data);
 };
 
+//Password creation validation
+const profileCompletionValidation = (data) => {
+  const schema = Joi.object({
+    gstNumber: Joi.string().required(),
+    bankName: Joi.string().required(),
+    accountName: Joi.string().required(),
+    accountNumber: Joi.string().required(),
+    ifscCode: Joi.string().required(),
+    upiId: Joi.string().required(),
+    panCardCopy: Joi.string().required(),
+    gstCopy: Joi.string().required(),
+    retailerCode: Joi.string().required(),
+    retailerId: Joi.string().required(),
+    longitude: Joi.number().required(),
+    latitude: Joi.number().required(),
+  });
+
+  return schema.validate(data);
+};
+
 module.exports.retailerCreationValidation = retailerCreationValidation;
 module.exports.retailerLoginValidation = retailerLoginValidation;
 module.exports.phoneNumberValidation = phoneNumberValidation;
 module.exports.passwordCreationValidation = passwordCreationValidation;
+module.exports.profileCompletionValidation = profileCompletionValidation;
