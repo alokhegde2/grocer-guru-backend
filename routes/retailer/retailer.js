@@ -197,16 +197,19 @@ app.post("/login", async (req, res) => {
     { expiresIn: "7d" }
   );
 
+  var isProfileCompleted = retailerData["upiId"] !== "";
+
   if (!retailerData["isApproved"]) {
     logger.log({
       level: "info",
-      message: `Retailer| Logged In | Retailer Code: ${code}| Retailer Not Approved till now`,
+      message: `Retailer| Logged In | Retailer Code: ${code}| Retailer Not Approved till now| Profile Complete Status ${isProfileCompleted}`,
     });
     //returning succes with header auth-token
-    return res
-      .status(200)
-      .header("auth-token", token)
-      .json({ status: "success-not-approved", authToken: token });
+    return res.status(200).header("auth-token", token).json({
+      status: "success-not-approved",
+      authToken: token,
+      profileStatus: isProfileCompleted,
+    });
   }
   logger.log({
     level: "info",
@@ -216,7 +219,11 @@ app.post("/login", async (req, res) => {
   return res
     .status(200)
     .header("auth-token", token)
-    .json({ status: "success", authToken: token });
+    .json({
+      status: "success",
+      authToken: token,
+      profileStatus: isProfileCompleted,
+    });
 });
 
 /**
@@ -428,7 +435,7 @@ app.post("/complete-profile", verify, async (req, res) => {
       .json({ status: "error", message: "Retailer not found" });
   }
 
-  if(retailerStatus["_id"]!=retailerId){
+  if (retailerStatus["_id"] != retailerId) {
     logger.log({
       level: "error",
       message: `Retailer| Profile Completion | Retailer Code: ${retailerCode}| Invalid retailer id`,
