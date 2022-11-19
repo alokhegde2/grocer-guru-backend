@@ -534,4 +534,35 @@ app.put("/admin/reject/:id", verify, async (req, res) => {
   }
 });
 
+// GETTING ALL APPROVED DISRIBUTOR (FOR ADMIN)
+app.get("/approved", verify, async (req, res) => {
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
+  try {
+    var distributorData = await Distributor.find({
+      isApproved: true,
+    })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    if (!distributorData) {
+      return res.send(200).json({ status: "success", distributors: [] });
+    }
+
+    return res
+      .status(200)
+      .json({ status: "success", distributors: distributorData });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
 module.exports = app;
