@@ -550,13 +550,17 @@ app.get("/admin/approved", verify, async (req, res) => {
       .limit(limit)
       .skip(startIndex);
 
+    var count = await Distributor.count();
+
     if (!distributorData) {
-      return res.send(200).json({ status: "success", distributors: [] });
+      return res
+        .send(200)
+        .json({ status: "success", distributors: [], count: 0 });
     }
 
     return res
       .status(200)
-      .json({ status: "success", distributors: distributorData });
+      .json({ status: "success", distributors: distributorData, count: count });
   } catch (error) {
     console.error(error);
     return res
