@@ -522,6 +522,10 @@ app.get("/admin/approved", verify, async (req, res) => {
       .json({ status: "success", retailers: retailerData, count: count });
   } catch (error) {
     console.error(error);
+    logger.log({
+      level: "error",
+      message: `Retailer| Admin Getting Approved Retailer| ${error}`,
+    });
     return res
       .status(500)
       .json({ status: "error", message: "Internal Server Error" });
