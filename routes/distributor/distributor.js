@@ -550,7 +550,9 @@ app.get("/admin/approved", verify, async (req, res) => {
       .limit(limit)
       .skip(startIndex);
 
-    var count = await Distributor.count();
+    var count = await Distributor.find({
+      isApproved: true,
+    }).count();
 
     if (!distributorData) {
       return res
