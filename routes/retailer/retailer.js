@@ -490,4 +490,42 @@ app.post("/complete-profile", verify, async (req, res) => {
   }
 });
 
+
+// GETTING ALL APPROVED RETAILERS (FOR ADMIN)
+app.get("/admin/approved", verify, async (req, res) => {
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
+  try {
+    var retailerData = await Retailer.find({
+      isApproved: true,
+    })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    var count = await Retailer.find({
+      isApproved: true,
+    }).count();
+
+    if (!retailerData) {
+      return res
+        .send(200)
+        .json({ status: "success", retailers: [], count: 0 });
+    }
+
+    return res
+      .status(200)
+      .json({ status: "success", retailers: retailerData, count: count });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
 module.exports = app;
