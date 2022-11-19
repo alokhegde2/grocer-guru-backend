@@ -535,7 +535,7 @@ app.put("/admin/reject/:id", verify, async (req, res) => {
 });
 
 // GETTING ALL APPROVED DISRIBUTOR (FOR ADMIN)
-app.get("/approved", verify, async (req, res) => {
+app.get("/admin/approved", verify, async (req, res) => {
   const page = parseInt(req.query.page);
   const limit = parseInt(req.query.limit);
 
