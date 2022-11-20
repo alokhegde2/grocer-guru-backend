@@ -571,4 +571,49 @@ app.get("/admin/approved", verify, async (req, res) => {
   }
 });
 
+/**
+ * Getting rejeted distributor (For the admin)
+ */
+app.get("/admin/rejected", verify, async (req, res) => {
+  const page = parseInt(req.query.page);
+  const limit = parseInt(req.query.limit);
+
+  const startIndex = (page - 1) * limit;
+
+  // GETTING ALL THE SALESPERSON CREATED DISTRIBUTOR
+  try {
+    var distributorData = await Distributor.find({
+      isApproved: false,
+      rejectionReason: { $ne: "" },
+    })
+      .sort({ createdDate: "desc" })
+      .limit(limit)
+      .skip(startIndex);
+
+    var distCount = await Distributor.find({
+      isApproved: false,
+      rejectionReason: { $ne: "" },
+    }).count();
+
+    if (!distributorData) {
+      return res
+        .send(200)
+        .json({ status: "success", distributors: [], count: 0 });
+    }
+
+    return res
+      .status(200)
+      .json({
+        status: "success",
+        distributors: distributorData,
+        count: distCount,
+      });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ status: "error", message: "Internal Server Error" });
+  }
+});
+
 module.exports = app;
