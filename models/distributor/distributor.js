@@ -79,6 +79,11 @@ const distributorSchema = new mongoose.Schema({
     required: true,
     default: false,
   },
+  isResubmitted: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
   isDeleted: {
     type: Boolean,
     required: true,

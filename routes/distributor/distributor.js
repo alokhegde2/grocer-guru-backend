@@ -464,11 +464,41 @@ app.get("/admin/pending", verify, async (req, res) => {
   const startIndex = (page - 1) * limit;
   try {
     var pendingDistributorCount = await Distributor.find({
-      isApproved: false,
+      $or: [
+        {
+          $and: [
+            { isApproved: false },
+            { isResubmitted: false },
+            { rejectionReason: "" },
+          ],
+        },
+        {
+          $and: [
+            { isResubmitted: true },
+            { rejectionReason: { $ne: "" } },
+            { isApproved: false },
+          ],
+        },
+      ],
     }).count();
 
     var pendingDistributors = await Distributor.find({
-      isApproved: false,
+      $or: [
+        {
+          $and: [
+            { isApproved: false },
+            { isResubmitted: false },
+            { rejectionReason: "" },
+          ],
+        },
+        {
+          $and: [
+            { isResubmitted: true },
+            { rejectionReason: { $ne: "" } },
+            { isApproved: false },
+          ],
+        },
+      ],
     })
       .sort({ createdDate: "desc" })
       .limit(limit)
@@ -584,10 +614,8 @@ app.get("/admin/rejected", verify, async (req, res) => {
   try {
     var distributorData = await Distributor.find({
       isApproved: false,
-      $or: [
-        { rejectionReason: { $ne: "" } },
-        { rejectionReason: { $ne: null } },
-      ],
+      rejectionReason: { $ne: "" },
+      isResubmitted: { $ne: true },
     })
       .sort({ createdDate: "desc" })
       .limit(limit)
@@ -595,10 +623,8 @@ app.get("/admin/rejected", verify, async (req, res) => {
 
     var distCount = await Distributor.find({
       isApproved: false,
-      $or: [
-        { rejectionReason: { $ne: "" } },
-        { rejectionReason: { $ne: null } },
-      ],
+      rejectionReason: { $ne: "" },
+      isResubmitted: { $ne: true },
     }).count();
 
     if (!distributorData) {
