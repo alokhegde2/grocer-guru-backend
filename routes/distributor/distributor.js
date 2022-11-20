@@ -584,7 +584,10 @@ app.get("/admin/rejected", verify, async (req, res) => {
   try {
     var distributorData = await Distributor.find({
       isApproved: false,
-      rejectionReason: { $ne: "" },
+      $or: [
+        { rejectionReason: { $ne: "" } },
+        { rejectionReason: { $ne: null } },
+      ],
     })
       .sort({ createdDate: "desc" })
       .limit(limit)
@@ -592,7 +595,10 @@ app.get("/admin/rejected", verify, async (req, res) => {
 
     var distCount = await Distributor.find({
       isApproved: false,
-      rejectionReason: { $ne: "" },
+      $or: [
+        { rejectionReason: { $ne: "" } },
+        { rejectionReason: { $ne: null } },
+      ],
     }).count();
 
     if (!distributorData) {
@@ -601,13 +607,11 @@ app.get("/admin/rejected", verify, async (req, res) => {
         .json({ status: "success", distributors: [], count: 0 });
     }
 
-    return res
-      .status(200)
-      .json({
-        status: "success",
-        distributors: distributorData,
-        count: distCount,
-      });
+    return res.status(200).json({
+      status: "success",
+      distributors: distributorData,
+      count: distCount,
+    });
   } catch (error) {
     console.error(error);
     return res
